@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+<meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+	<title>study_canvas</title>
+	<style type="text/css">
+	   *{
+	   	margin:0;
+	   	padding: 0;
+	   }
+		.wrap{
+			width:1000px;
+			height:800px;
+			margin:0 auto;
+		}
+		.myCanvas{
+			position: relative;
+			width:100%;
+			height:600px;
+			border:5px solid #FF7F24;
+		}
+		.myButtons ul li{
+            list-style: none;
+            display: inline-block;
+            margin-top: 10px;
+            margin-right: 5px;
+		}
+		canvas{
+		  width: 800px;
+		  height: 600px;
+		  background:#fff;
+		}
+
+		.myButtons ul li button{
+			font-size: 16px;
+			color:#fff;
+			background: #FF7F24;
+			border:none;
+			padding:10px 20px;
+		}
+		.myButtons ul li button:hover{
+			cursor: pointer;
+			background: #FF7F24 linear-gradient(hsla(0,0%,100%,.2),transparent)
+		}
+        .eraser{
+            border:1px solid black;
+            width: 18px;height:18px;
+            position: absolute;
+            display: none;
+        }
+        .selectarea{
+		    width: 100px;
+		    height:100px;
+		    border:1px dotted black;
+		    position: absolute;
+		    left: 0;
+		    top:0;
+		    display: none;
+		}
+	</style>
+</head>
+<body>
+<div class="wrap">
+	<div class="myCanvas">
+		<div class="eraser"></div>
+		<div class="selectarea"></div>
+		<canvas width="800" height="600"></canvas>
+	</div>
+	<div class="myButtons">
+		<ul>
+			<li><button class="pen">画笔</button></li>
+			<li><button class="straight">画直线</button></li>
+			<li><button class="circle">画圆</button></li>
+			<li><button class="rect">画矩形</button></li>
+			<li><button class="write">写字</button></li>
+			<li><button class="addPic">添加图片</button></li>
+			<li><button class="revPic">反转图片</button></li>
+			<li><button class="undo">撤销</button></li>
+			<li><button class="erase">擦除</button></li>
+		</ul>
+	</div>
+</div>
+ <script src="jQuery.js"></script>
+<script type="text/javascript">
+	var canvas = document.querySelector('canvas')
+	var ctx=canvas.getContext('2d')
+
+	var wrap=$('.myCanvas')[0]
+	var eraser=$('.eraser')
+	var selectarea=$('.selectarea')
+	 // 创建实例
+    var obj = new draw(wrap, canvas, ctx, eraser, selectarea)
+    $('.myButtons li button').on('click',function(){
+    	var type=$(this).attr('class')
+    	if(type=='pen'){
+    		obj.shapes=type
+     		obj.pen()
+    	}
+    	if(type=='straight'){
+    		obj.shapes=type
+    		obj.draw()
+    	}
+    	if(type=='rect'){
+    		obj.shapes=type
+        		obj.draw()
+    	}
+    	if(type=='circle'){
+    		obj.shapes=type
+        		obj.draw()
+    	}
+    	if(type=='undo'){
+        		obj.undo()
+    	}
+    	if(type=='erase'){
+    		    var w=18
+    		    var h=18
+        		obj.erase(eraser,w,h)
+    	}
+    	if(type=='write'){
+        		obj.text(selectarea)
+    	}
+
+
+
+    })
+
+      function draw(wrap, canvas, ctx, eraser, selectarea){
+      this.wrap = wrap
+      this.width = canvas.width
+      this.height = canvas.height
+      this.ctx = ctx
+      this.eraser = eraser
+      this.selectarea = selectarea
+      this.temp = null
+
+      this.bgcolor = "#000"
+      this.borderColor = "#000"
+      this.borderWidth = 1
+      this.font = "48px serif"
+
+      this.type = "stroke";
+      this.shapes = "straight"
+
+      this.history = [this.ctx.getImageData(0, 0, this.width, this.height)]
+    }
+
+    draw.prototype.init = function () {
+      //清除橡皮擦
+      this.eraser.css("display", "none")
+      //清除选择框
+      this.selectarea.css("display", "none")
+      ctx.textBaseline="top";
+      if (this.temp) {
+          this.history.push(this.ctx.getImageData(0, 0, this.width, this.height))
+          this.temp = null
+      }
+      //初始化
+      this.ctx.fillStyle = this.bgcolor
+      this.ctx.strokeStyle = this.borderColor
+      this.ctx.lineWidth = this.borderWidth
+      this.ctx.font = this.font
+    };
+    /*
+      画笔工具
+     */
+    draw.prototype.pen = function() {
+      var that = this;
+      that.init();
+       this.wrap.onmousedown = function (e) {
+
+        var startx = e.offsetX;
+        var starty = e.offsetY;
+        that.init();
+        that.ctx.beginPath();
+        that.ctx.moveTo(startx, starty);
+        // console.log('startx为',startx)
+        that.wrap.onmousemove = function (e) {
+          var endx = e.offsetX;
+          var endy = e.offsetY;
+          that.ctx.lineTo(endx, endy);
+          that.ctx.stroke();
+        };
+        that.wrap.onmouseup = function () {
+          that.ctx.closePath();
+          var data = that.ctx.getImageData(0, 0, that.width, that.height);
+          that.history.push(data);
+          that.wrap.onmousemove = null;
+          that.wrap.onmouseup = null;
+        }
+      }
+    };
+     draw.prototype.straight = function(sx, sy, ex, ey) {
+      var that = this;
+      // that.init();
+      that.ctx.beginPath();
+      that.ctx.moveTo(sx, sy);
+      that.ctx.lineTo(ex, ey);
+      that.ctx.stroke();
+      that.ctx.closePath();
+    };
+     draw.prototype.rect = function (x, y, x1, y1) {
+      var that = this;
+      that.init();
+      that.ctx.beginPath();
+      that.ctx.rect(x, y, x1 - x, y1 - y);
+      that.ctx.closePath();
+      that.ctx[that.type]();
+    },
+    draw.prototype.circle = function (x, y, x1, y1) {
+      var that = this;
+      var r = Math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y))
+      that.init();
+      that.ctx.beginPath();
+      that.ctx.arc(x, y, r, 0, Math.PI * 2);//画圆
+      that.ctx.closePath();
+      that.ctx[that.type]();
+    },
+
+    //绘制函数
+    draw.prototype.draw = function () {
+      var that = this;
+        that.wrap.onmousedown = function (e) {
+        var startx = e.offsetX;
+        var starty = e.offsetY;
+        that.init();
+        that.wrap.onmousemove = function (e) {
+          that.ctx.clearRect(0, 0, that.width, that.height);
+          if (that.history.length != 0) {
+              that.ctx.putImageData(that.history[that.history.length - 1], 0, 0);
+          }
+
+          var endx = e.offsetX;
+          var endy = e.offsetY;
+
+          that[that.shapes](startx, starty, endx, endy);
+        };
+        that.wrap.onmouseup = function () {
+          var data = that.ctx.getImageData(0, 0, that.width, that.height);
+          that.history.push(data);
+          that.wrap.onmousemove = null;
+          that.wrap.onmouseup = null;
+        }
+      }
+    };
+    draw.prototype.undo = function(){
+      var that = this;
+      console.log(this.history);
+      that.ctx.clearRect(0, 0, that.width, that.height);
+      if(that.history.length === 1){
+        alert("无法撤销");
+        return;
+      }
+      // var data = that.history.pop();
+      that.ctx.putImageData(that.history[that.history.length - 2], 0, 0);
+      that.history.pop();
+      console.log('pop后'+this.history);
+
+    };
+
+     draw.prototype.erase = function (eraser, w, h) {
+      var that = this;
+      that.init();
+      that.wrap.onmousemove = function (e) {
+        var ox = e.offsetX;
+        var oy = e.offsetY;
+        eraser.css({
+            display: "block",
+            width: w,
+            height: h,
+        })
+        var left = ox - w / 2;
+        var top = oy - h / 2;
+        if (left < 0) {
+            left = 0;
+        }
+        if (left > that.width - w) {
+            left = that.width - w;
+        }
+        if (top < 0) {
+            top = 0;
+        }
+        if (top > that.height - h) {
+            top = that.height - h;
+        }
+        eraser.css({
+            left: left,
+            top: top,
+        })
+      }
+      that.wrap.onmousedown = function () {
+        that.init();
+        that.wrap.onmousemove = function (e) {
+          var ox = e.offsetX;
+          var oy = e.offsetY;
+          var left = ox - w / 2;
+          var top = oy - h / 2;
+          if (left < 0) {
+              left = 0;
+          }
+          if (left > that.width - w) {
+              left = that.width - w;
+          }
+          if (top < 0) {
+              top = 0;
+          }
+          if (top > that.height - h) {
+              top = that.height - h;
+          }
+          eraser.css({
+              left: left,
+              top: top,
+              display: "block"
+          })
+          that.ctx.clearRect(left, top, w, h);
+        }
+        that.wrap.onmouseup = function () {
+          eraser.css({
+              display: "none"
+          })
+          that.history.push(that.ctx.getImageData(0, 0, that.width, that.height));
+          that.wrap.onmousemove = null;
+          that.wrap.onmouseup = null;
+          // that.erase(eraser, w, h);
+        }
+      }
+    };
+
+    draw.prototype.text = function(text) {
+      var that = this;
+      that.init();
+      that.wrap.onmousedown = function (e) {
+          var startx = e.offsetX;
+          var starty = e.offsetY;
+          var minx, miny, w, h;
+          that.init();
+          that.wrap.onmousemove = function (e) {
+              that.init();
+              var endx = e.offsetX;
+              var endy = e.offsetY;
+              minx = Math.min(startx, endx);
+              miny = Math.min(starty, endy);
+              w = Math.abs(endx - startx);
+              h = Math.abs(endy - starty);
+              text.css({
+                  display: "block",
+                  left: minx,
+                  top: miny,
+                  width: w,
+                  height: h
+              })
+          }
+          that.wrap.onmouseup = function (e) {
+              that.wrap.onmouseup = null;
+              that.wrap.onmousemove = null;
+              var promptTemp = prompt("内容:","请输入文字");
+              var textcontent = (promptTemp == null)? '':promptTemp;
+              ctx.fillText(textcontent, minx, miny);
+              that.temp = that.ctx.getImageData(minx, miny, w, h);
+              that.ctx.clearRect(minx, miny, w, h)
+              that.history.push(that.ctx.getImageData(0, 0, that.width, that.height))
+              that.ctx.putImageData(that.temp, minx, miny);
+              // that.drag(minx, miny, w, h, text);
+          }
+      }
+    };
+
+
+</script>
+</body>
+</html>
