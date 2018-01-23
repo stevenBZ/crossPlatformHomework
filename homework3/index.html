@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <h3>1.给网页中所有的&lt;p&gt;元素添加click事件</h3>
+    <p>Click Me</p>
+    <p>Click Me</p>
+    <p>Click Me</p>
+    <h3>2.使一个特定的表格隔行变色</h3>
+    <table>
+        <tr>
+            <th>Year</th>
+            <th>Month</th>
+        </tr>
+        <tr>
+            <td>1995</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>1996</td>
+            <td>5</td>
+        </tr>
+        <tr>
+            <td>1998</td>
+            <td>9</td>
+        </tr>
+        <tr>
+            <td>1999</td>
+            <td>11</td>
+        </tr>
+    </table>
+    <h3>3.对多选框进行操作，输出选中的多选框的个数。</h3>
+    <div id="checkBoxs">
+        <input  type="checkbox">test1
+        <input  type="checkbox">test2
+        <input  type="checkbox">test3
+        <input  type="checkbox">test4
+        <button id="checkBoxBtn">你选中的个数</button>
+    </div>
+</body>
+<script src='jQuery.js'></script>
+<script>
+    $('p').on('click',function(){
+        alert('hello!')
+    })
+    $('tr:even').css('background-color','#D7C4BB')
+    $('#checkBoxBtn').on('click',function(){
+        var items=$(':checked')
+        alert("选中的个数为：" +  items.length);
+    })
+</script>
+</html>
